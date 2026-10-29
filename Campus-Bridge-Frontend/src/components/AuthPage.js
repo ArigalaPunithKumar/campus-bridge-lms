@@ -30,7 +30,6 @@ const AuthPage = () => {
     const [forgotEmail, setForgotEmail] = useState("");
     const [otp, setOtp] = useState("");
     const [newPassword, setNewPassword] = useState("");
-    const [devOtp, setDevOtp] = useState("");
 
     const [showLoginPassword, setShowLoginPassword] = useState(false);
     const [showRegisterPassword, setShowRegisterPassword] = useState(false);
@@ -84,7 +83,6 @@ const AuthPage = () => {
         setIsResetStage(false);
         setOtp("");
         setNewPassword("");
-        setDevOtp("");
         setOtpTimer(OTP_DURATION_SECONDS);
         setIsOtpExpired(false);
     };
@@ -163,7 +161,6 @@ const AuthPage = () => {
         setIsSubmitting(true);
         try {
             const res = await axios.post("https://campus-bridge-lms.onrender.com/api/auth/forgot-password", { email: forgotEmail });
-            setDevOtp(res.data.otpPreview || "");
             showMessage("success", res.data.msg || `OTP sent to ${forgotEmail}.`);
             setOtpTimer(OTP_DURATION_SECONDS);
             setIsOtpExpired(false);
@@ -407,9 +404,6 @@ const AuthPage = () => {
                                             <span>Code expires in <strong>{formatTimer(otpTimer)}</strong></span>
                                         )}
                                     </div>
-                                    {devOtp && (
-                                        <div className="dev-otp-box">Development OTP: <strong>{devOtp}</strong></div>
-                                    )}
                                     <div className="input-group">
                                         <FaLock className="input-icon" />
                                         <input type="text" inputMode="numeric" maxLength="6" placeholder="Enter 6-digit OTP" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))} />
