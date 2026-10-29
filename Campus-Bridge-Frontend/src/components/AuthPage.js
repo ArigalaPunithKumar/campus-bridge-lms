@@ -176,7 +176,6 @@ const AuthPage = () => {
         setIsSubmitting(true);
         try {
             const res = await axios.post("https://campus-bridge-lms.onrender.com/api/auth/forgot-password", { email: forgotEmail });
-            setDevOtp(res.data.otpPreview || "");
             showMessage("success", res.data.msg || `OTP resent to ${forgotEmail}.`);
             setOtpTimer(OTP_DURATION_SECONDS);
             setIsOtpExpired(false);
