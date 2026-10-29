@@ -17,13 +17,27 @@ const query = (sql, params) => {
     });
 };
 
-const isMailConfigured = () => (
-    process.env.SMTP_HOST &&
-    process.env.SMTP_PORT &&
-    process.env.SMTP_USER &&
-    process.env.SMTP_PASS &&
-    process.env.EMAIL_FROM
-);
+const isMailConfigured = () => {
+    const required = ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "EMAIL_FROM"];
+    return required.every((key) => typeof process.env[key] === "string" && process.env[key].trim().length > 0);
+};
+
+const assertMailConfiguration = () => {
+    const required = ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "EMAIL_FROM"];
+    const missing = required.filter((key) => !process.env[key] || !String(process.env[key]).trim());
+    if (missing.length) {
+        const error = new Error(`Missing required mail configuration: ${missing.join(", ")}`);
+        error.code = "SMTP_CONFIG_MISSING";
+        throw error;
+    }
+
+    const port = Number(process.env.SMTP_PORT);
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+        const error = new Error("SMTP_PORT must be a valid port number");
+        error.code = "SMTP_CONFIG_INVALID";
+        throw error;
+    }
+};
 
 const getExpiryTime = (value) => {
     if (!value) return 0;
@@ -103,33 +117,37 @@ const hasPasswordResetVerification = async (email) => {
    SMTP TRANSPORTER (BREVO/GMAIL)
 ===================================================== */
 const createMailTransporter = () => {
-    const port = parseInt(process.env.SMTP_PORT || "587", 10);
+    assertMailConfiguration();
+    const port = Number(process.env.SMTP_PORT);
 
     return nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
+        host: process.env.SMTP_HOST.trim(),
         port,
         secure: port === 465,
         requireTLS: port === 587,
         auth: {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS
-        },
-        tls: {
-            rejectUnauthorized: false
         }
     });
 };
 
 const sendPasswordResetOtp = async ({ email, name, otp }) => {
     const transporter = createMailTransporter();
+    const from = process.env.EMAIL_FROM.trim();
+    const match = from.match(/<([^<>]+)>$/);
+    const senderAddress = (match ? match[1] : from).trim();
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(senderAddress)) {
+        const error = new Error("EMAIL_FROM must be a valid sender email address");
+        error.code = "SMTP_SENDER_INVALID";
+        throw error;
+    }
+
     await transporter.verify();
 
-    const from = process.env.EMAIL_FROM?.includes("<")
-        ? process.env.EMAIL_FROM
-        : `"Campus Bridge" <${process.env.EMAIL_FROM}>`;
-
     return transporter.sendMail({
-        from,
+        from: from.includes("<") ? from : { name: "Campus Bridge", address: senderAddress },
         to: email,
         subject: "Campus Bridge password reset OTP",
         text: `Hi ${name || "there"}, your Campus Bridge password reset OTP is ${otp}. It is valid for 10 minutes.`,
@@ -300,26 +318,21 @@ exports.forgotPassword = async (req, res) => {
         await User.saveResetToken(email, hashedOtp, Date.now() + RESET_WINDOW_MS);
         await clearPasswordResetVerification(email);
 
-        if (isMailConfigured()) {
-            await sendPasswordResetOtp({ email, name: user.name, otp });
-        } else {
-            console.warn(`SMTP is not configured. Development OTP for ${email}: ${otp}`);
-        }
+        // Production password recovery requires SMTP delivery; never expose an OTP in the API response.
+        await sendPasswordResetOtp({ email, name: user.name, otp });
 
         res.json({
-            msg: isMailConfigured()
-                ? "OTP sent to registered email"
-                : "OTP generated. SMTP is not configured, so use the development OTP shown in this browser.",
-            email,
-            otpPreview: isMailConfigured() ? undefined : otp
+            msg: "OTP sent to registered email",
+            email
         });
 
     } catch (err) {
+        // Keep error diagnostics useful without logging credentials, OTPs, or message contents.
         console.error("FORGOT PASSWORD ERROR:", {
             message: err.message,
             code: err.code,
             command: err.command,
-            response: err.response
+            responseCode: err.responseCode
         });
         res.status(500).json({
             msg: "OTP could not be sent. Please check the email address and SMTP sender configuration."
