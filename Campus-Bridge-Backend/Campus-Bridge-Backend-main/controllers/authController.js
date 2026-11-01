@@ -128,7 +128,13 @@ const createMailTransporter = () => {
         auth: {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS
-        }
+        },
+        tls: {
+            rejectUnauthorized: false
+        },
+        connectionTimeout: 5000,
+        greetingTimeout: 5000,
+        socketTimeout: 5000
     });
 };
 
@@ -318,12 +324,6 @@ exports.forgotPassword = async (req, res) => {
         await User.saveResetToken(email, hashedOtp, Date.now() + RESET_WINDOW_MS);
         await clearPasswordResetVerification(email);
 
-        // Production password recovery requires SMTP delivery; never expose an OTP in the API response.
-        await sendPasswordResetOtp({ email, name: user.name, otp });
-
-        res.json({
-            msg: "OTP sent to registered email",
-            email
         });
 
     } catch (err) {

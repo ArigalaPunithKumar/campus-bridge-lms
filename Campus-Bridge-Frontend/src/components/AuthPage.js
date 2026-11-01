@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./Auth.css";
 import axios from "axios";
-import "../apiConfig";
+import { API_BASE_URL } from "../apiConfig";
 import {
     FaArrowLeft,
     FaEnvelope,
@@ -9,7 +9,6 @@ import {
     FaEyeSlash,
     FaGraduationCap,
     FaLock,
-    FaRocket,
     FaShieldAlt,
     FaUser,
     FaUserCheck
@@ -30,10 +29,13 @@ const AuthPage = () => {
     const [forgotEmail, setForgotEmail] = useState("");
     const [otp, setOtp] = useState("");
     const [newPassword, setNewPassword] = useState("");
+    const [confirmResetPassword, setConfirmResetPassword] = useState("");
+    const [devOtp, setDevOtp] = useState("");
 
     const [showLoginPassword, setShowLoginPassword] = useState(false);
     const [showRegisterPassword, setShowRegisterPassword] = useState(false);
     const [showResetPassword, setShowResetPassword] = useState(false);
+    const [showConfirmResetPassword, setShowConfirmResetPassword] = useState(false);
 
     const [otpTimer, setOtpTimer] = useState(OTP_DURATION_SECONDS);
     const [isOtpExpired, setIsOtpExpired] = useState(false);
@@ -83,6 +85,8 @@ const AuthPage = () => {
         setIsResetStage(false);
         setOtp("");
         setNewPassword("");
+        setConfirmResetPassword("");
+        setDevOtp("");
         setOtpTimer(OTP_DURATION_SECONDS);
         setIsOtpExpired(false);
     };
@@ -112,7 +116,7 @@ const AuthPage = () => {
                 password: registerData.password,
                 role: registerData.role,
             };
-            const res = await axios.post("https://campus-bridge-lms.onrender.com/api/auth/register", payload);
+            const res = await axios.post(`${API_BASE_URL}/auth/register`, payload);
             showMessage("success", res.data.msg || "Registration successful.");
             setIsRightPanelActive(false);
             setRegisterData({
@@ -137,7 +141,7 @@ const AuthPage = () => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const res = await axios.post("https://campus-bridge-lms.onrender.com/api/auth/login", loginData);
+            const res = await axios.post(`${API_BASE_URL}/auth/login`, loginData);
             const { user } = res.data;
             showMessage("success", `Welcome back, ${user.name}.`);
 
@@ -160,13 +164,14 @@ const AuthPage = () => {
 
         setIsSubmitting(true);
         try {
-            const res = await axios.post("https://campus-bridge-lms.onrender.com/api/auth/forgot-password", { email: forgotEmail });
-            showMessage("success", res.data.msg || `OTP sent to ${forgotEmail}.`);
+            const res = await axios.post(`${API_BASE_URL}/auth/forgot-password`, { email: forgotEmail });
+            setDevOtp(res.data.otpPreview || "");
+            showMessage("success", res.data.msg || `OTP generated for ${forgotEmail}.`);
             setOtpTimer(OTP_DURATION_SECONDS);
             setIsOtpExpired(false);
             setIsOtpStage(true);
         } catch (err) {
-            showMessage("error", err.response?.data?.msg || "Error sending OTP.");
+            showMessage("error", err.response?.data?.msg || "Error generating OTP.");
         } finally {
             setIsSubmitting(false);
         }
@@ -175,8 +180,9 @@ const AuthPage = () => {
     const handleResendOtp = async () => {
         setIsSubmitting(true);
         try {
-            const res = await axios.post("https://campus-bridge-lms.onrender.com/api/auth/forgot-password", { email: forgotEmail });
-            showMessage("success", res.data.msg || `OTP resent to ${forgotEmail}.`);
+            const res = await axios.post(`${API_BASE_URL}/auth/forgot-password`, { email: forgotEmail });
+            setDevOtp(res.data.otpPreview || "");
+            showMessage("success", res.data.msg || `OTP refreshed for ${forgotEmail}.`);
             setOtpTimer(OTP_DURATION_SECONDS);
             setIsOtpExpired(false);
         } catch (err) {
@@ -188,17 +194,17 @@ const AuthPage = () => {
 
     const handleOtpVerify = async () => {
         if (otp.length < 6) {
-            showMessage("error", "Enter the 6-digit OTP.");
+            showMessage("error", "Enter the 6-digit verification code.");
             return;
         }
 
         setIsSubmitting(true);
         try {
-            await axios.post("https://campus-bridge-lms.onrender.com/api/auth/verify-otp", { email: forgotEmail, otp });
-            showMessage("success", "OTP verified. Create your new password.");
+            await axios.post(`${API_BASE_URL}/auth/verify-otp`, { email: forgotEmail, otp });
+            showMessage("success", "OTP verified! Please create your new password.");
             setIsResetStage(true);
         } catch (err) {
-            showMessage("error", err.response?.data?.msg || "Invalid OTP.");
+            showMessage("error", err.response?.data?.msg || "Invalid or expired OTP.");
         } finally {
             setIsSubmitting(false);
         }
@@ -210,14 +216,19 @@ const AuthPage = () => {
             return;
         }
 
+        if (confirmResetPassword && newPassword !== confirmResetPassword) {
+            showMessage("error", "Passwords do not match.");
+            return;
+        }
+
         setIsSubmitting(true);
         try {
-            await axios.post("https://campus-bridge-lms.onrender.com/api/auth/reset-password", { email: forgotEmail, newPassword });
-            showMessage("success", "Password reset successful. Please login.");
+            await axios.post(`${API_BASE_URL}/auth/reset-password`, { email: forgotEmail, newPassword });
+            showMessage("success", "Password reset successful! Please login with your new password.");
             setForgotEmail("");
             resetForgotFlow();
         } catch (err) {
-            showMessage("error", err.response?.data?.msg || "Reset failed.");
+            showMessage("error", err.response?.data?.msg || "Reset failed. Please try again.");
         } finally {
             setIsSubmitting(false);
         }
@@ -236,27 +247,50 @@ const AuthPage = () => {
 
     return (
         <div className="auth-container">
+            {/* Animated background ambient lighting */}
             <div className="animated-bg">
                 <span className="shape shape-one"></span>
                 <span className="shape shape-two"></span>
                 <span className="shape shape-three"></span>
             </div>
 
+            {/* University Brand Header */}
             <header className="brand-header">
                 <div className="brand-mark"><FaGraduationCap /></div>
                 <div className="brand-text">
                     <h2>Campus Bridge</h2>
-                    <span>Learning Management Portal</span>
+                    <span>LMS Portal</span>
                 </div>
             </header>
 
+            {/* Central Auth Card */}
             <div className={`auth-wrapper ${isRightPanelActive ? "right-panel-active" : ""} ${isForgot ? "forgot-active" : ""}`}>
+                {!isForgot && (
+                    <div className="auth-tab-switch">
+                        <button
+                            type="button"
+                            className={`auth-tab-btn ${!isRightPanelActive ? "active" : ""}`}
+                            onClick={() => handlePanelSwitch(false)}
+                        >
+                            Sign In
+                        </button>
+                        <button
+                            type="button"
+                            className={`auth-tab-btn ${isRightPanelActive ? "active" : ""}`}
+                            onClick={() => handlePanelSwitch(true)}
+                        >
+                            Create Account
+                        </button>
+                    </div>
+                )}
+
+                {/* SIGN IN FORM */}
                 {!isForgot && (
                     <div className="form-container sign-in-container">
                         <form className="auth-form" onSubmit={handleLogin}>
                             <div className="form-kicker"><FaShieldAlt /> Secure access</div>
                             <h1>Welcome Back</h1>
-                            <span className="subtitle">Sign in to continue your campus workflow.</span>
+                            <span className="subtitle">Sign in to access courses, attendance, and campus tools.</span>
 
                             {message.text && !isRightPanelActive && (
                                 <div className={`auth-message ${message.type}`}>{message.text}</div>
@@ -264,7 +298,14 @@ const AuthPage = () => {
 
                             <div className="input-group">
                                 <FaEnvelope className="input-icon" />
-                                <input type="email" name="email" placeholder="Email address" value={loginData.email} onChange={handleLoginChange} required />
+                                <input
+                                    type="email"
+                                    name="email"
+                                    placeholder="Registered email address"
+                                    value={loginData.email}
+                                    onChange={handleLoginChange}
+                                    required
+                                />
                             </div>
 
                             <div className="input-group">
@@ -272,12 +313,17 @@ const AuthPage = () => {
                                 <input
                                     type={showLoginPassword ? "text" : "password"}
                                     name="password"
-                                    placeholder="Password"
+                                    placeholder="Account password"
                                     value={loginData.password}
                                     onChange={handleLoginChange}
                                     required
                                 />
-                                <button type="button" className="password-toggle" onClick={() => setShowLoginPassword(prev => !prev)} aria-label="Toggle password visibility">
+                                <button
+                                    type="button"
+                                    className="password-toggle"
+                                    onClick={() => setShowLoginPassword(prev => !prev)}
+                                    aria-label="Toggle password visibility"
+                                >
                                     {showLoginPassword ? <FaEyeSlash /> : <FaEye />}
                                 </button>
                             </div>
@@ -287,22 +333,23 @@ const AuthPage = () => {
                             </button>
 
                             <button type="submit" className="primary-btn" disabled={isSubmitting}>
-                                {isSubmitting ? "Please wait..." : "Login"}
+                                {isSubmitting ? "Signing in..." : "Sign In"}
                             </button>
 
-                            <span className="mobile-switch" onClick={() => handlePanelSwitch(true)}>
+                            <button type="button" className="mobile-switch" onClick={() => handlePanelSwitch(true)}>
                                 Don't have an account? <strong>Sign Up</strong>
-                            </span>
+                            </button>
                         </form>
                     </div>
                 )}
 
+                {/* SIGN UP FORM */}
                 {!isForgot && (
                     <div className="form-container sign-up-container">
                         <form className="auth-form" onSubmit={handleRegister}>
-                            <div className="form-kicker"><FaUserCheck /> Complete registration</div>
+                            <div className="form-kicker"><FaUserCheck /> Registration</div>
                             <h1>Create Account</h1>
-                            <span className="subtitle">Join as a student, faculty member, or admin.</span>
+                            <span className="subtitle">Join as a student, faculty member, or campus admin.</span>
 
                             {message.text && isRightPanelActive && (
                                 <div className={`auth-message ${message.type}`}>{message.text}</div>
@@ -310,12 +357,26 @@ const AuthPage = () => {
 
                             <div className="input-group">
                                 <FaUser className="input-icon" />
-                                <input type="text" name="name" placeholder="Full name" required value={registerData.name} onChange={handleRegisterChange} />
+                                <input
+                                    type="text"
+                                    name="name"
+                                    placeholder="Full name"
+                                    required
+                                    value={registerData.name}
+                                    onChange={handleRegisterChange}
+                                />
                             </div>
 
                             <div className="input-group">
                                 <FaEnvelope className="input-icon" />
-                                <input type="email" name="email" placeholder="Email address" required value={registerData.email} onChange={handleRegisterChange} />
+                                <input
+                                    type="email"
+                                    name="email"
+                                    placeholder="Email address"
+                                    required
+                                    value={registerData.email}
+                                    onChange={handleRegisterChange}
+                                />
                             </div>
 
                             <div className="input-group">
@@ -323,12 +384,17 @@ const AuthPage = () => {
                                 <input
                                     type={showRegisterPassword ? "text" : "password"}
                                     name="password"
-                                    placeholder="Create password"
+                                    placeholder="Create password (min 6 characters)"
                                     required
                                     value={registerData.password}
                                     onChange={handleRegisterChange}
                                 />
-                                <button type="button" className="password-toggle" onClick={() => setShowRegisterPassword(prev => !prev)} aria-label="Toggle password visibility">
+                                <button
+                                    type="button"
+                                    className="password-toggle"
+                                    onClick={() => setShowRegisterPassword(prev => !prev)}
+                                    aria-label="Toggle password visibility"
+                                >
                                     {showRegisterPassword ? <FaEyeSlash /> : <FaEye />}
                                 </button>
                             </div>
@@ -338,7 +404,7 @@ const AuthPage = () => {
                                 <input
                                     type={showRegisterPassword ? "text" : "password"}
                                     name="confirmPassword"
-                                    placeholder="Confirm password"
+                                    placeholder="Confirm your password"
                                     required
                                     value={registerData.confirmPassword}
                                     onChange={handleRegisterChange}
@@ -348,75 +414,115 @@ const AuthPage = () => {
                             <div className="role-select-container">
                                 <FaGraduationCap className="input-icon" />
                                 <select name="role" value={registerData.role} onChange={handleRegisterChange}>
-                                    <option value="student">Student</option>
-                                    <option value="faculty">Faculty</option>
-                                    <option value="admin">Admin</option>
+                                    <option value="student">Student Account</option>
+                                    <option value="faculty">Faculty Account</option>
+                                    <option value="admin">Administrator</option>
                                 </select>
                             </div>
 
                             <button type="submit" className="primary-btn" disabled={isSubmitting}>
-                                {isSubmitting ? "Creating..." : "Register"}
+                                {isSubmitting ? "Creating Account..." : "Create Account"}
                             </button>
 
-                            <span className="mobile-switch" onClick={() => handlePanelSwitch(false)}>
+                            <button type="button" className="mobile-switch" onClick={() => handlePanelSwitch(false)}>
                                 Already have an account? <strong>Sign In</strong>
-                            </span>
+                            </button>
                         </form>
                     </div>
                 )}
 
+                {/* FORGOT & RESET PASSWORD FLOW */}
                 {isForgot && (
                     <div className="form-container reset-container forgot-mode">
                         <form className="auth-form reset-form" onSubmit={(e) => e.preventDefault()}>
-                            <div className="form-kicker"><FaShieldAlt /> Password recovery</div>
-                            <div className="reset-steps" aria-label="Reset password progress">
-                                <span className={!isOtpStage ? "active" : "done"}>Email</span>
-                                <span className={isOtpStage && !isResetStage ? "active" : isResetStage ? "done" : ""}>OTP</span>
-                                <span className={isResetStage ? "active" : ""}>Password</span>
+                            <div className="reset-steps" aria-label="Password recovery steps">
+                                <span className={!isOtpStage ? "active" : "done"}>1. Email</span>
+                                <span className={isOtpStage && !isResetStage ? "active" : isResetStage ? "done" : ""}>2. OTP</span>
+                                <span className={isResetStage ? "active" : ""}>3. New Password</span>
                             </div>
 
                             {message.text && (
                                 <div className={`auth-message ${message.type}`}>{message.text}</div>
                             )}
 
+                            {/* STEP 1: ENTER EMAIL */}
                             {!isOtpStage && !isResetStage && (
                                 <>
                                     <h1>Reset Password</h1>
-                                    <span className="subtitle">Enter your registered email and we will send a secure OTP.</span>
+                                    <span className="subtitle">Enter your registered email and we will generate a secure verification OTP.</span>
                                     <div className="input-group">
                                         <FaEnvelope className="input-icon" />
-                                        <input type="email" placeholder="Email address" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} />
+                                        <input
+                                            type="email"
+                                            placeholder="Registered email address"
+                                            value={forgotEmail}
+                                            onChange={(e) => setForgotEmail(e.target.value)}
+                                            required
+                                        />
                                     </div>
                                     <button type="button" className="primary-btn" onClick={handleForgotPassword} disabled={isSubmitting}>
-                                        {isSubmitting ? "Sending..." : "Send OTP"}
+                                        {isSubmitting ? "Generating OTP..." : "Send Verification OTP"}
                                     </button>
                                 </>
                             )}
 
+                            {/* STEP 2: VERIFY OTP */}
                             {isOtpStage && !isResetStage && (
                                 <>
-                                    <h1>Verify Identity</h1>
+                                    <h1>Verify OTP</h1>
+                                    <span className="subtitle">Enter the 6-digit verification code for {forgotEmail}.</span>
+
+                                    {devOtp && (
+                                        <div className="otp-preview-banner">
+                                            <div className="otp-preview-text">
+                                                <span className="otp-badge-title">Verification Code</span>
+                                                <div className="otp-code-highlight">{devOtp}</div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className="otp-autofill-btn"
+                                                onClick={() => setOtp(String(devOtp))}
+                                                title="Click to auto-fill code"
+                                            >
+                                                Auto-fill
+                                            </button>
+                                        </div>
+                                    )}
+
                                     <div className="timer-text">
                                         {isOtpExpired ? (
-                                            <button type="button" className="expired-link" onClick={handleResendOtp} disabled={isSubmitting}>Resend Code</button>
+                                            <button type="button" className="expired-link" onClick={handleResendOtp} disabled={isSubmitting}>
+                                                Code expired. Click to Resend
+                                            </button>
                                         ) : (
                                             <span>Code expires in <strong>{formatTimer(otpTimer)}</strong></span>
                                         )}
                                     </div>
+
                                     <div className="input-group">
                                         <FaLock className="input-icon" />
-                                        <input type="text" inputMode="numeric" maxLength="6" placeholder="Enter 6-digit OTP" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))} />
+                                        <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            maxLength="6"
+                                            placeholder="Enter 6-digit OTP"
+                                            value={otp}
+                                            onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                                        />
                                     </div>
+
                                     <button type="button" className="primary-btn" onClick={handleOtpVerify} disabled={isSubmitting || isOtpExpired}>
-                                        {isSubmitting ? "Checking..." : "Verify OTP"}
+                                        {isSubmitting ? "Verifying..." : "Verify & Continue"}
                                     </button>
                                 </>
                             )}
 
+                            {/* STEP 3: NEW PASSWORD */}
                             {isResetStage && (
                                 <>
-                                    <h1>New Password</h1>
-                                    <span className="subtitle">Choose a strong password with at least 6 characters.</span>
+                                    <h1>Set New Password</h1>
+                                    <span className="subtitle">Choose a new, secure password (at least 6 characters).</span>
+                                    
                                     <div className="input-group">
                                         <FaLock className="input-icon" />
                                         <input
@@ -425,44 +531,50 @@ const AuthPage = () => {
                                             value={newPassword}
                                             onChange={(e) => setNewPassword(e.target.value)}
                                         />
-                                        <button type="button" className="password-toggle" onClick={() => setShowResetPassword(prev => !prev)} aria-label="Toggle password visibility">
+                                        <button
+                                            type="button"
+                                            className="password-toggle"
+                                            onClick={() => setShowResetPassword(prev => !prev)}
+                                            aria-label="Toggle password visibility"
+                                        >
                                             {showResetPassword ? <FaEyeSlash /> : <FaEye />}
                                         </button>
                                     </div>
+
+                                    <div className="input-group">
+                                        <FaLock className="input-icon" />
+                                        <input
+                                            type={showConfirmResetPassword ? "text" : "password"}
+                                            placeholder="Confirm new password"
+                                            value={confirmResetPassword}
+                                            onChange={(e) => setConfirmResetPassword(e.target.value)}
+                                        />
+                                        <button
+                                            type="button"
+                                            className="password-toggle"
+                                            onClick={() => setShowConfirmResetPassword(prev => !prev)}
+                                            aria-label="Toggle confirm password visibility"
+                                        >
+                                            {showConfirmResetPassword ? <FaEyeSlash /> : <FaEye />}
+                                        </button>
+                                    </div>
+
                                     <button type="button" className="primary-btn" onClick={handleResetPassword} disabled={isSubmitting}>
-                                        {isSubmitting ? "Updating..." : "Update Password"}
+                                        {isSubmitting ? "Updating Password..." : "Update Password"}
                                     </button>
                                 </>
                             )}
 
-                            <button type="button" className="back-to-login-link" onClick={() => { resetForgotFlow(); setMessage({ type: "", text: "" }); }}>
+                            <button
+                                type="button"
+                                className="back-to-login-link"
+                                onClick={() => { resetForgotFlow(); setMessage({ type: "", text: "" }); }}
+                            >
                                 <FaArrowLeft /> Back to Login
                             </button>
                         </form>
                     </div>
                 )}
-
-                <div className="overlay-container">
-                    <div className="overlay">
-                        <div className="overlay-panel overlay-left">
-                            <div className="overlay-icon"><FaRocket /></div>
-                            <h1>Already registered?</h1>
-                            <p>Return to your dashboard, manage classes, review updates, and keep learning moving.</p>
-                            <button type="button" className="ghost" onClick={() => handlePanelSwitch(false)}>
-                                Sign In
-                            </button>
-                        </div>
-
-                        <div className="overlay-panel overlay-right">
-                            <div className="overlay-icon"><FaGraduationCap /></div>
-                            <h1>New to Campus Bridge?</h1>
-                            <p>Create your account and unlock one connected place for courses, attendance, coding practice, and updates.</p>
-                            <button type="button" className="ghost" onClick={() => handlePanelSwitch(true)}>
-                                Sign Up
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     );

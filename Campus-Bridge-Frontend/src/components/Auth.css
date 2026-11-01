@@ -1,16 +1,22 @@
-/* Cord.com Style Auth Page */
+/* ==========================================================================
+   Campus Bridge LMS - Authentication Styling
+   Modern University Theme with Campus Background & Glassmorphic Card
+   ========================================================================== */
+
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: var(--font-figtree);
-  background: var(--color-canvas-white);
-  color: var(--color-midnight-harbor);
+  font-family: var(--font-figtree, 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  color: #0b3658;
   overflow-x: hidden;
 }
 
+/* =========================================
+   Container with Campus Photography Background
+   ========================================= */
 .auth-container {
   position: relative;
   width: 100%;
@@ -19,60 +25,205 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: var(--spacing-64) var(--spacing-24);
-  background-color: var(--color-canvas-white);
+  padding: 88px 20px 40px;
+  background-color: #0b2545;
+  background-image: 
+    linear-gradient(135deg, rgba(8, 28, 51, 0.86) 0%, rgba(15, 23, 42, 0.90) 100%),
+    url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=2000&q=85');
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  overflow-x: hidden;
 }
 
+/* Ambient animated lighting orbs */
+.animated-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.45;
+  animation: floatOrb 18s ease-in-out infinite alternate;
+}
+
+.shape-one {
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle, #2563eb 0%, rgba(37, 99, 235, 0) 70%);
+  top: -120px;
+  right: -80px;
+}
+
+.shape-two {
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, #0284c7 0%, rgba(2, 132, 199, 0) 70%);
+  bottom: -150px;
+  left: -100px;
+  animation-duration: 22s;
+  animation-delay: -5s;
+}
+
+.shape-three {
+  width: 360px;
+  height: 360px;
+  background: radial-gradient(circle, #0d9488 0%, rgba(13, 148, 136, 0) 70%);
+  top: 35%;
+  left: 15%;
+  animation-duration: 20s;
+  animation-delay: -10s;
+}
+
+@keyframes floatOrb {
+  0% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-25px) scale(1.06);
+  }
+  100% {
+    transform: translateY(20px) scale(0.95);
+  }
+}
+
+/* =========================================
+   Brand Header (Top Left Floating Glass Badge)
+   ========================================= */
 .brand-header {
   position: absolute;
-  top: var(--spacing-32);
-  left: var(--spacing-40);
+  top: 24px;
+  left: 32px;
   display: flex;
   align-items: center;
-  gap: var(--spacing-12);
-  z-index: 3;
+  gap: 12px;
+  z-index: 10;
+  padding: 8px 18px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 40px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.brand-header:hover {
+  background: rgba(255, 255, 255, 0.16);
+  transform: translateY(-1px);
 }
 
 .brand-mark {
-  color: var(--color-signal-blue);
-  font-size: var(--text-heading-lg);
-  font-weight: var(--font-weight-extrabold);
-  letter-spacing: var(--tracking-heading-lg);
-  margin: 0;
-  line-height: var(--leading-heading-lg);
+  color: #60a5fa;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
 }
 
 .brand-text h2 {
-  font-size: var(--text-heading);
-  color: var(--color-signal-blue);
+  font-size: 17px;
+  color: #ffffff;
   margin: 0;
-  font-weight: var(--font-weight-extrabold);
-  letter-spacing: var(--tracking-heading);
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  line-height: 1.2;
 }
 
 .brand-text span {
-  display: none; /* Simplify logo to wordmark style */
+  display: block;
+  font-size: 11px;
+  color: #cbd5e1;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
-/* Central layout for the card */
+/* =========================================
+   Central Auth Card (Frosted Glassmorphic)
+   ========================================= */
 .auth-wrapper {
   position: relative;
   width: 100%;
   max-width: 480px;
-  background: var(--color-canvas-white);
-  border-radius: var(--radius-cards);
-  box-shadow: var(--shadow-xl);
-  padding: var(--spacing-48);
-  border: 1px solid var(--color-sea-fog);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 24px;
+  box-shadow: 
+    0 20px 50px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.8),
+    0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 38px 36px 36px;
   display: flex;
   flex-direction: column;
+  z-index: 5;
+  transition: box-shadow 0.3s ease;
 }
 
-.auth-wrapper.forgot-active .reset-container {
+/* Tab Switcher (Sign In / Sign Up) */
+.auth-tab-switch {
   display: flex;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 14px;
+  margin-bottom: 22px;
+  border: 1px solid #e2e8f0;
 }
 
-/* The form itself */
+.auth-tab-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.auth-tab-btn.active {
+  background: #ffffff;
+  color: #0b3658;
+  box-shadow: 0 2px 8px rgba(11, 54, 88, 0.12);
+}
+
+.auth-tab-btn:hover:not(.active) {
+  color: #0b3658;
+}
+
+/* Card titles and headings */
+.auth-wrapper h1 {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0b3658;
+  letter-spacing: -0.4px;
+  margin: 0 0 6px;
+  text-align: center;
+}
+
+.subtitle {
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 24px;
+  display: block;
+}
+
+/* Forms layout */
 .auth-form {
   width: 100%;
   display: flex;
@@ -87,9 +238,11 @@ body {
 .sign-in-container {
   display: flex;
 }
+
 .sign-up-container {
   display: none;
 }
+
 .reset-container {
   display: none;
 }
@@ -97,185 +250,322 @@ body {
 .auth-wrapper.right-panel-active .sign-in-container {
   display: none;
 }
+
 .auth-wrapper.right-panel-active .sign-up-container {
   display: flex;
 }
 
-.auth-container h1 {
-  font-size: var(--text-heading-lg);
-  font-weight: var(--font-weight-extrabold);
-  color: var(--color-midnight-harbor);
-  letter-spacing: var(--tracking-heading-lg);
-  margin-bottom: var(--spacing-8);
-  text-align: center;
+.auth-wrapper.forgot-active .reset-container {
+  display: flex;
 }
 
-.subtitle {
-  text-align: center;
-  color: var(--color-slate-channel);
-  font-size: var(--text-body);
-  margin-bottom: var(--spacing-32);
-}
-
-/* Inputs */
+/* =========================================
+   Input Fields & Select Controls
+   ========================================= */
 .input-group,
 .role-select-container {
   position: relative;
   width: 100%;
-  margin-bottom: var(--spacing-16);
+  margin-bottom: 14px;
 }
 
 .input-icon {
   position: absolute;
   top: 50%;
-  left: var(--spacing-16);
+  left: 16px;
   transform: translateY(-50%);
-  color: var(--color-slate-channel);
-  font-size: var(--text-body);
+  color: #64748b;
+  font-size: 16px;
   z-index: 2;
+  pointer-events: none;
 }
 
 .auth-container input,
 .auth-container select {
   width: 100%;
-  min-height: 52px;
-  padding: var(--spacing-16) var(--spacing-20) var(--spacing-16) 44px;
-  border-radius: var(--radius-inputs);
-  border: 1px solid var(--color-sea-fog);
-  background: var(--color-canvas-white);
-  color: var(--color-midnight-harbor);
-  font-size: var(--text-body);
-  font-family: var(--font-figtree);
+  min-height: 50px;
+  padding: 13px 18px 13px 44px;
+  border-radius: 14px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 15px;
+  font-family: inherit;
   outline: none;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .auth-container input:focus,
 .auth-container select:focus {
-  border-color: var(--color-pale-steel);
-  box-shadow: var(--shadow-xl-4);
+  background: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.14);
 }
 
 .auth-container input::placeholder {
-  color: var(--color-pale-steel);
+  color: #94a3b8;
 }
 
-/* Specific case when icon is not present or we want simpler inputs */
 .role-select-container select {
   appearance: none;
-  padding-left: var(--spacing-20);
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 16px;
+  cursor: pointer;
 }
 
 .password-toggle {
   position: absolute;
   top: 50%;
-  right: var(--spacing-12);
+  right: 12px;
   transform: translateY(-50%);
   background: transparent;
   border: none;
-  color: var(--color-slate-channel);
+  color: #64748b;
   cursor: pointer;
-  padding: var(--spacing-8);
-  border-radius: var(--radius-md);
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 
 .password-toggle:hover {
-  background: var(--color-ice-tint);
+  color: #0b3658;
+  background: #e2e8f0;
 }
 
-/* Buttons */
+/* =========================================
+   Buttons & Links
+   ========================================= */
 button.primary-btn {
   width: 100%;
   min-height: 48px;
-  background: var(--color-signal-blue);
-  color: var(--color-canvas-white);
-  font-weight: var(--font-weight-semibold);
-  font-size: var(--text-body);
-  padding: var(--spacing-12) var(--spacing-20);
-  border-radius: var(--radius-buttons);
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 12px 20px;
+  border-radius: 14px;
   border: none;
   cursor: pointer;
-  margin-top: var(--spacing-16);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin-top: 10px;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 button.primary-btn:hover {
-  box-shadow: var(--shadow-md);
+  background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
   transform: translateY(-1px);
 }
 
+button.primary-btn:active {
+  transform: translateY(0);
+}
+
 button.primary-btn:disabled {
-  background: var(--color-light-mist);
+  background: #cbd5e1;
+  color: #64748b;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
-/* Links & small text */
 .forgot-password-link {
   display: block;
   text-align: right;
   background: none;
   border: none;
-  color: var(--color-slate-channel);
-  font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-semibold);
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  margin-top: var(--spacing-4);
-  margin-bottom: var(--spacing-16);
+  margin-top: 2px;
+  margin-bottom: 12px;
   padding: 0;
+  transition: color 0.15s ease;
 }
 
 .forgot-password-link:hover {
-  color: var(--color-midnight-harbor);
+  color: #1d4ed8;
+  text-decoration: underline;
 }
 
-.mobile-switch, .back-to-login-link {
-  display: block;
+.mobile-switch,
+.back-to-login-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   text-align: center;
-  margin-top: var(--spacing-24);
-  color: var(--color-slate-channel);
-  font-size: var(--text-body-sm);
+  margin-top: 20px;
+  color: #64748b;
+  font-size: 14px;
   background: none;
   border: none;
   cursor: pointer;
   width: 100%;
+  transition: color 0.15s ease;
 }
 
-.mobile-switch strong, .back-to-login-link {
-  color: var(--color-signal-blue);
-  font-weight: var(--font-weight-semibold);
+.mobile-switch strong,
+.back-to-login-link {
+  color: #2563eb;
+  font-weight: 600;
 }
 
-.mobile-switch strong:hover, .back-to-login-link:hover {
+.mobile-switch:hover strong,
+.back-to-login-link:hover {
+  color: #1d4ed8;
   text-decoration: underline;
-  text-decoration-color: var(--color-sea-fog);
 }
 
-/* Messages */
+/* =========================================
+   Alert / Status Messages
+   ========================================= */
 .auth-message {
-  padding: var(--spacing-12) var(--spacing-16);
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--spacing-16);
-  font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-semibold);
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 18px;
+  font-size: 13.5px;
+  font-weight: 600;
   text-align: center;
+  animation: fadeInMsg 0.25s ease-out;
+}
+
+@keyframes fadeInMsg {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .auth-message.error {
-  background: #fee2e2;
+  background: #fef2f2;
   color: #991b1b;
   border: 1px solid #fecaca;
 }
 
 .auth-message.success {
-  background: #d1fae5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
 }
 
-/* Remove overlay panel and fancy shapes */
-.overlay-container, .animated-bg {
+/* =========================================
+   Forgot Password Flow Elements
+   ========================================= */
+.reset-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.reset-steps span {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: #f1f5f9;
+  color: #94a3b8;
+  transition: all 0.2s ease;
+}
+
+.reset-steps span.active {
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+.reset-steps span.done {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.timer-text {
+  text-align: center;
+  font-size: 13.5px;
+  color: #64748b;
+  margin-bottom: 14px;
+}
+
+.timer-text strong {
+  color: #0b3658;
+  font-weight: 700;
+}
+
+.expired-link {
+  color: #dc2626;
+  font-weight: 700;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 13.5px;
+  padding: 0;
+}
+
+.expired-link:hover {
+  color: #b91c1c;
+}
+
+/* OTP Preview & Auto-fill Banner */
+.otp-preview-banner {
+  background: #eff6ff;
+  border: 1.5px dashed #93c5fd;
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.otp-preview-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.otp-badge-title {
+  font-size: 11px;
+  color: #1e40af;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.otp-code-highlight {
+  font-size: 24px;
+  letter-spacing: 4px;
+  color: #1d4ed8;
+  font-weight: 800;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.otp-autofill-btn {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.otp-autofill-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+/* Overlay & unused items */
+.overlay-container {
   display: none;
 }
 
@@ -283,16 +573,30 @@ button.primary-btn:disabled {
   display: none;
 }
 
+/* =========================================
+   Responsive Adjustments
+   ========================================= */
 @media (max-width: 600px) {
-  .auth-wrapper {
-    padding: var(--spacing-32) var(--spacing-20);
-    box-shadow: none;
-    border: none;
+  .auth-container {
+    padding: 76px 16px 28px;
   }
-  
+
+  .auth-wrapper {
+    padding: 28px 20px;
+    border-radius: 20px;
+  }
+
   .brand-header {
-    top: var(--spacing-16);
-    left: var(--spacing-16);
+    top: 16px;
+    left: 16px;
+    padding: 6px 14px;
+  }
+
+  .brand-text h2 {
+    font-size: 15px;
+  }
+
+  .brand-text span {
+    font-size: 10px;
   }
 }
-
