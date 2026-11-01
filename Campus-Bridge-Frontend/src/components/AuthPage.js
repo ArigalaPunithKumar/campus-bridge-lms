@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./Auth.css";
 import axios from "axios";
 import { API_BASE_URL } from "../apiConfig";
+import campusBg from "../assets/campus-bg.jpg";
 import {
     FaArrowLeft,
     FaEnvelope,
@@ -246,7 +247,12 @@ const AuthPage = () => {
     };
 
     return (
-        <div className="auth-container">
+        <div
+            className="auth-container"
+            style={{
+                backgroundImage: `linear-gradient(135deg, rgba(8, 28, 51, 0.84) 0%, rgba(15, 23, 42, 0.90) 100%), url(${campusBg})`
+            }}
+        >
             {/* Animated background ambient lighting */}
             <div className="animated-bg">
                 <span className="shape shape-one"></span>
@@ -436,9 +442,11 @@ const AuthPage = () => {
                     <div className="form-container reset-container forgot-mode">
                         <form className="auth-form reset-form" onSubmit={(e) => e.preventDefault()}>
                             <div className="reset-steps" aria-label="Password recovery steps">
-                                <span className={!isOtpStage ? "active" : "done"}>1. Email</span>
-                                <span className={isOtpStage && !isResetStage ? "active" : isResetStage ? "done" : ""}>2. OTP</span>
-                                <span className={isResetStage ? "active" : ""}>3. New Password</span>
+                                <span className={`step-pill ${!isOtpStage ? "active" : "done"}`}>1. Email</span>
+                                <span className="step-arrow">→</span>
+                                <span className={`step-pill ${isOtpStage && !isResetStage ? "active" : isResetStage ? "done" : ""}`}>2. OTP</span>
+                                <span className="step-arrow">→</span>
+                                <span className={`step-pill ${isResetStage ? "active" : ""}`}>3. New Password</span>
                             </div>
 
                             {message.text && (
