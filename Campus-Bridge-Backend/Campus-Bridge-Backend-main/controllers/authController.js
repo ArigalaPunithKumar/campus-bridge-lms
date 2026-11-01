@@ -252,7 +252,28 @@ exports.loginUser = async (req, res) => {
 
         const user = users[0];
 
-        const isMatch = await bcrypt.compare(password, user.password);
+        let isMatch = false;
+        const isBcryptHash = typeof user.password === "string" && (
+            user.password.startsWith("$2a$") ||
+            user.password.startsWith("$2b$") ||
+            user.password.startsWith("$2y$")
+        );
+
+        if (isBcryptHash) {
+            isMatch = await bcrypt.compare(password, user.password);
+        } else {
+            // Support plain-text passwords (e.g. manually set in DB) and auto-upgrade to bcrypt
+            isMatch = (password === user.password);
+            if (isMatch) {
+                try {
+                    const upgradedHash = await bcrypt.hash(password, 10);
+                    await query("UPDATE users SET password = ? WHERE id = ?", [upgradedHash, user.id]);
+                } catch (upgradeErr) {
+                    console.warn("Auto-hash upgrade failed:", upgradeErr.message);
+                }
+            }
+        }
+
         if (!isMatch) {
             return res.status(400).json({ msg: "Invalid email or password" });
         }
@@ -324,6 +345,24 @@ exports.forgotPassword = async (req, res) => {
         await User.saveResetToken(email, hashedOtp, Date.now() + RESET_WINDOW_MS);
         await clearPasswordResetVerification(email);
 
+        let emailSent = false;
+        if (isMailConfigured()) {
+            try {
+                await sendPasswordResetOtp({ email, name: user.name, otp });
+                emailSent = true;
+            } catch (mailErr) {
+                console.warn("SMTP delivery failed for " + email + ":", mailErr.message);
+            }
+        } else {
+            console.warn("SMTP is not configured. Development OTP for " + email + ": " + otp);
+        }
+
+        res.json({
+            msg: emailSent
+                ? "OTP sent to your registered email address."
+                : "OTP generated successfully! Please use the verification code shown below.",
+            email,
+            otpPreview: emailSent ? undefined : otp
         });
 
     } catch (err) {
